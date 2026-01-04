@@ -41,3 +41,9 @@ pytest -q
 ## Results placeholders
 - Key figures: `reports/figures/`
 - Summary: `reports/summary.md`
+
+### Forecasted vs realized volatility (5D/21D realized volatility)
+![Forecast vs Realized](reports/figures/forecast_vs_realized.png)
+
+### Monte Carlo option pricing with 95% CI (convergence to Black–Scholes)
+![MC CI Convergence](reports/figures/mc_ci_convergence.png)
