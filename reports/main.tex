@@ -1,0 +1,131 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{hyperref}
+
+\geometry{margin=1in}
+
+\title{\textbf{Volatility Modelling and Option Pricing}\\
+\vspace{0.2cm}
+\large A Quantitative Study Using Rolling, EWMA, and GARCH Models}
+\author{Mohamad ElMahdi Houmani}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Data}
+We study daily adjusted close prices of the SPY ETF over the period 2015--2024.
+Prices are converted to log returns,
+\[
+r_t = \log\left(\frac{P_t}{P_{t-1}}\right),
+\]
+which form the basic input for all volatility models.
+Returns are treated as approximately mean-zero and are expressed in daily units unless stated otherwise.
+Annualization is performed using a factor of $\sqrt{252}$.
+
+\section{Volatility Models}
+We estimate time-varying volatility using three standard approaches:
+\begin{itemize}
+    \item \textbf{Rolling (Historical) Volatility:} Standard deviation of returns over a fixed window (20 trading days).
+    \item \textbf{EWMA Volatility:} Exponentially weighted moving average variance,
+    \[
+    \sigma_t^2 = \lambda \sigma_{t-1}^2 + (1-\lambda) r_{t-1}^2,
+    \quad \lambda = 0.94.
+    \]
+    \item \textbf{GARCH(1,1):} Conditional variance model,
+    \[
+    \sigma_t^2 = \omega + \alpha r_{t-1}^2 + \beta \sigma_{t-1}^2,
+    \]
+    with parameters estimated via maximum likelihood.
+\end{itemize}
+All models produce one-step-ahead volatility forecasts.
+
+\section{Evaluation Methodology}
+Volatility forecasts are evaluated using a walk-forward (out-of-sample) framework.
+At each time $t$, models are fitted using data available up to $t$ and used to forecast volatility for $t+1$.
+
+To reduce noise in the target, realized volatility is computed using windowed realized variance,
+\[
+\text{RV}^{(w)}_t = \sqrt{\frac{252}{w} \sum_{i=0}^{w-1} r_{t-i}^2},
+\]
+with windows $w=5$ (weekly) and $w=21$ (monthly).
+
+Forecast accuracy is assessed using standard metrics:
+\begin{itemize}
+    \item Mean Squared Error (MSE) on variance,
+    \item Mean Absolute Error (MAE) on volatility,
+    \item QLIKE loss, commonly used in volatility forecasting.
+\end{itemize}
+
+\section{Results}
+
+\subsection*{Forecast Accuracy}
+Table~\ref{tab:metrics} summarizes the out-of-sample performance for each model.
+Smoothed realized volatility leads to more stable and interpretable comparisons.
+
+\begin{table}[h]
+\centering
+\caption{Out-of-sample volatility forecast evaluation using windowed realized volatility}
+\label{tab:metrics}
+\begin{tabular}{llccc}
+\toprule
+Model & Window & MSE (variance) & MAE (vol) & QLIKE \\
+\midrule
+Historical & 5  & 0.009359 & 0.052850 & -2.713700 \\
+Historical & 21 & 0.000178 & 0.007565 & -2.767174 \\
+EWMA       & 5  & 0.008596 & 0.056341 & -2.683947 \\
+EWMA       & 21 & 0.000927 & 0.021133 & -2.732824 \\
+GARCH(1,1) & 5  & 0.001597 & 0.032931 & -2.838724 \\
+GARCH(1,1) & 21 & 0.004505 & 0.033791 & -2.679181 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection*{Forecasted vs Realized Volatility}
+Figure~\ref{fig:forecast} compares forecasted volatility to windowed realized volatility.
+All models capture volatility clustering, with GARCH reacting most strongly to shocks and exhibiting clear mean reversion.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/forecast_vs_realized.png}
+\caption{Forecasted volatility vs windowed realized volatility (annualized)}
+\label{fig:forecast}
+\end{figure}
+
+\section{Option Pricing}
+Estimated volatility is used as input for European call option pricing.
+
+\begin{itemize}
+    \item \textbf{Black--Scholes:} Closed-form pricing under constant volatility.
+    \item \textbf{Monte Carlo:} Simulation of geometric Brownian motion under the risk-neutral measure,
+    \[
+    dS_t = r S_t dt + \sigma S_t dW_t.
+    \]
+\end{itemize}
+
+Monte Carlo pricing includes 95\% confidence intervals,
+demonstrating convergence to the Black--Scholes price at the expected rate $\mathcal{O}(1/\sqrt{N})$.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/mc_ci_convergence.png}
+\caption{Monte Carlo option pricing with 95\% confidence intervals}
+\label{fig:mc}
+\end{figure}
+
+\section{Limitations}
+Several limitations should be noted:
+\begin{itemize}
+    \item Daily data limits the precision of realized volatility estimation.
+    \item Windowed realized variance remains a proxy for latent volatility.
+    \item Black--Scholes and Monte Carlo pricing assume lognormal dynamics and constant volatility.
+    \item Transaction costs and market microstructure effects are not modeled.
+\end{itemize}
+
+Despite these limitations, the project demonstrates a complete and coherent volatility modelling and option pricing pipeline.
+
+\end{document}
