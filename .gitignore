@@ -6,3 +6,11 @@ __pycache__/
 data/raw/
 data/processed/
 reports/figures/
+
+# LaTeX build artifacts
+reports/*.aux
+reports/*.log
+reports/*.out
+reports/*.fls
+reports/*.fdb_latexmk
+reports/*.synctex.gz
